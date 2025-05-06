@@ -1,0 +1,13 @@
+en:
+  label_imap_host: "IMAP Host"
+  label_imap_port: "IMAP Port"
+  label_imap_ssl: "Use SSL"
+  label_imap_username: "Username"
+  label_imap_password: "Password"
+  label_imap_folder: "IMAP Folder"
+  label_default_project: "Default Project"
+  button_test_connection: "Test Connection"
+  text_testing_connection: "Testing connection"
+  notice_email_settings_successful: "Successfully connected to email server"
+  error_email_settings_connection: "Connection failed: %{message}"
+  error_test_connection_failed: "Connection test failed"
