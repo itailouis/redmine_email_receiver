@@ -1,56 +1,71 @@
-<table>
-  <tbody>
-    <tr>
-      <th><%= l(:label_imap_host) %></th>
-      <td>
-        <%= text_field_tag 'settings[imap_host]', @settings['imap_host'], size: 60 %>
-      </td>
-    </tr>
-    <tr>
-      <th><%= l(:label_imap_port) %></th>
-      <td>
-        <%= text_field_tag 'settings[imap_port]', @settings['imap_port'], size: 10 %>
-      </td>
-    </tr>
-    <tr>
-      <th><%= l(:label_imap_ssl) %></th>
-      <td>
-        <%= check_box_tag 'settings[imap_ssl]', '1', @settings['imap_ssl'] == '1' %>
-      </td>
-    </tr>
-    <tr>
-      <th><%= l(:label_imap_username) %></th>
-      <td>
-        <%= text_field_tag 'settings[imap_username]', @settings['imap_username'], size: 60 %>
-      </td>
-    </tr>
-    <tr>
-      <th><%= l(:label_imap_password) %></th>
-      <td>
-        <%= password_field_tag 'settings[imap_password]', @settings['imap_password'], size: 60 %>
-      </td>
-    </tr>
-    <tr>
-      <th><%= l(:label_imap_folder) %></th>
-      <td>
-        <%= text_field_tag 'settings[imap_folder]', @settings['imap_folder'], size: 30 %>
-      </td>
-    </tr>
-    <tr>
-      <th><%= l(:label_default_project) %></th>
-      <td>
-        <%= select_tag 'settings[default_project]',
-            options_from_collection_for_select(Project.active.sorted, 'identifier', 'name', @settings['default_project']) %>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2">
-        <%= button_tag l(:button_test_connection), type: 'button', id: 'test-connection-button', class: 'button' %>
-        <span id="test-connection-result"></span>
-      </td>
-    </tr>
-  </tbody>
-</table>
+<%# redmine_email_receiver/app/views/settings/_email_receiver_settings.html.erb %>
+
+
+<div class="box tabular settings">
+  <h3><%= l(:label_imap_settings) %></h3>
+  
+  <table>
+    <tbody>
+      <tr>
+        <th><%= l(:label_imap_host) %></th>
+        <td>
+          <%= text_field_tag 'settings[imap_host]', @settings['imap_host'], size: 60 %>
+        </td>
+      </tr>
+      <tr>
+        <th><%= l(:label_imap_port) %></th>
+        <td>
+          <%= text_field_tag 'settings[imap_port]', @settings['imap_port'] || '993', size: 10 %>
+        </td>
+      </tr>
+      <tr>
+        <th><%= l(:label_imap_ssl) %></th>
+        <td>
+          <%= check_box_tag 'settings[imap_ssl]', '1', @settings['imap_ssl'] == '1' || @settings['imap_ssl'].nil? %>
+        </td>
+      </tr>
+      <tr>
+        <th><%= l(:label_imap_username) %></th>
+        <td>
+          <%= text_field_tag 'settings[imap_username]', @settings['imap_username'], size: 60 %>
+        </td>
+      </tr>
+      <tr>
+        <th><%= l(:label_imap_password) %></th>
+        <td>
+          <%= password_field_tag 'settings[imap_password]', @settings['imap_password'], size: 60 %>
+        </td>
+      </tr>
+      <tr>
+        <th><%= l(:label_imap_folder) %></th>
+        <td>
+          <%= text_field_tag 'settings[imap_folder]', @settings['imap_folder'] || 'INBOX', size: 30 %>
+        </td>
+      </tr>
+      <tr>
+        <th><%= l(:label_default_project) %></th>
+        <td>
+          <%= select_tag 'settings[default_project]',
+              options_from_collection_for_select(Project.active.sorted, 'identifier', 'name', @settings['default_project']) %>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <%= button_tag l(:button_test_connection), type: 'button', id: 'test-connection-button', class: 'button' %>
+          <% if @settings['imap_host'].present? && @settings['imap_username'].present? && @settings['imap_password'].present? %>
+            <%= link_to l(:button_fetch_emails), { controller: 'email_receiver', action: 'fetch_emails' }, class: 'button' %>
+          <% end %>
+          <span id="test-connection-result"></span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <%# Hidden fields for default values for removed section %>
+  <%= hidden_field_tag 'settings[tracker_id]', @settings['tracker_id'] || Tracker.first&.id %>
+  <%= hidden_field_tag 'settings[priority_id]', @settings['priority_id'] || IssuePriority.default&.id %>
+  <%= hidden_field_tag 'settings[fetch_schedule]', @settings['fetch_schedule'] || '' %>
+</div>
 
 <%= javascript_tag do %>
   $(document).ready(function() {
@@ -64,6 +79,16 @@
       $.ajax({
         url: '<%= url_for(controller: 'email_receiver', action: 'test_connection') %>',
         method: 'POST',
+        data: {
+          settings: {
+            imap_host: $('#settings_imap_host').val(),
+            imap_port: $('#settings_imap_port').val(),
+            imap_ssl: $('#settings_imap_ssl').is(':checked') ? '1' : '0',
+            imap_username: $('#settings_imap_username').val(),
+            imap_password: $('#settings_imap_password').val(),
+            imap_folder: $('#settings_imap_folder').val()
+          }
+        },
         success: function(response) {
           if (response.status === 'success') {
             resultSpan.html('<span class="notice">' + response.message + '</span>');

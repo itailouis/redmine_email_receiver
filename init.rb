@@ -2,6 +2,11 @@ require 'redmine'
 
 def load_settings
     config_file = File.join(File.dirname(__FILE__), 'config', 'settings.yml')
+    unless File.exist?(config_file)
+      File.open(config_file, 'w') { |f| f.write("---\n") }
+      File.chmod(0666, config_file)  # Make writable
+    end
+
     if File.exist?(config_file)
       YAML.load_file(config_file)['email_settings']
     else
@@ -16,6 +21,7 @@ def load_settings
         'default_project' => ''
       }
     end
+    Rails.logger.info "Email Receiver: Loading settings from #{config_file}"
 end
 
 Redmine::Plugin.register :redmine_email_receiver do
@@ -24,5 +30,6 @@ Redmine::Plugin.register :redmine_email_receiver do
   description 'A plugin to receive emails and create issues'
   version '0.0.1'
 
-  settings default: load_settings, partial: 'settings/email_receiver_settings'
+  settings default: load_settings,
+           partial: 'settings/email_receiver_settings'
 end
