@@ -1,9 +1,20 @@
 class EmailReceiverController < ApplicationController
   before_action :require_admin
 
+  private
+
+  def load_settings
+    config_file = File.join(Rails.root, 'plugins', 'redmine_email_receiver', 'config', 'settings.yml')
+    if File.exist?(config_file)
+      YAML.load_file(config_file)['email_settings'] || {}
+    else
+      {}
+    end
+  end
+
   def test_connection
     begin
-      settings = Setting.plugin_redmine_email_receiver
+      settings = load_settings
       imap_settings = {
         host: settings['imap_host'],
         port: settings['imap_port'].to_i,
