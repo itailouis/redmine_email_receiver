@@ -1,1 +1,8 @@
 /.idea/
+
+# Ignore actual settings file
+config/settings.yml
+
+# Ignore sensitive files
+*.log
+*.env

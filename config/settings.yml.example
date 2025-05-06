@@ -1,0 +1,8 @@
+mail_settings:
+  imap_host: 'your.imap.server'
+  imap_port: '25'
+  imap_ssl: '0'
+  imap_username: 'your.email@example.com'
+  imap_password: 'your_password'
+  imap_folder: 'INBOX'
+  default_project: 'your_project'
