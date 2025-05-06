@@ -1,5 +1,10 @@
 <%# redmine_email_receiver/app/views/settings/_email_receiver_settings.html.erb %>
 
+<%
+  # Fix for when @settings is true or not a hash
+  settings = @settings.is_a?(Hash) ? @settings : {}
+%>
+
 
 <div class="box tabular settings">
   <h3><%= l(:label_imap_settings) %></h3>
