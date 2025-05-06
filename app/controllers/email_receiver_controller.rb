@@ -8,7 +8,15 @@ class EmailReceiverController < ApplicationController
     if File.exist?(config_file)
       YAML.load_file(config_file)['email_settings'] || {}
     else
-      {}
+     {
+             'imap_host' => '',
+             'imap_port' => '25',
+             'imap_ssl' => '0',
+             'imap_username' => '',
+             'imap_password' => '',
+             'imap_folder' => 'INBOX',
+             'default_project' => ''
+           }
     end
   end
 
