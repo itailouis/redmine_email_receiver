@@ -68,15 +68,25 @@ class EmailReceiverController < ApplicationController
         end
         return
       end
+
+      Rails.logger.info "IMAP Connection Test result: #{response.inspect}"
       
       # Logout and disconnect
-      imap.logout
-      imap.disconnect
+     Rails.logger.info "Test successful, logging out"
+     imap.logout
+     imap.disconnect
       
       # Return success message
-      respond_to do |format|
-        format.json { render json: { status: 'success', message: l(:notice_connection_successful) } }
-      end
+
+      response = { status: 'success', message: l(:notice_connection_successful) }
+      Rails.logger.info "IMAP Connection Test result: #{response.inspect}"
+
+      # Return success message
+     respond_to do |format|
+         format.json { render json: response }
+     end
+
+
     rescue => e
       # Return error message
       Rails.logger.info "error Receiver:  #{e.message}"
