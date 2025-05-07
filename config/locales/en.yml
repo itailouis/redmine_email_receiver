@@ -1,14 +1,8 @@
 en:
   # Plugin information
   label_email_receiver: Email Receiver
-  text_email_receiver_description: "This plugin allows Redmine to create issues from emails received via IMAP."
-  
-  # Labels for settings
-  label_imap_settings: IMAP Server Settings
-  label_processing_options: Email Processing Options
-  label_manual_operations: Manual Operations
-  
-  # IMAP settings
+  label_imap_settings: IMAP Settings
+  label_processing_options: Processing Options
   label_imap_host: IMAP Host
   label_imap_port: Port
   label_imap_ssl: Use SSL
@@ -19,33 +13,32 @@ en:
   label_issue_tracker: Issue Tracker
   label_issue_priority: Issue Priority
   label_fetch_schedule: Fetch Schedule
-  
-  # Schedule options
+  label_manual_operations: Manual Operations
   label_manually_only: Manually Only
   label_every_5_minutes: Every 5 minutes
   label_every_10_minutes: Every 10 minutes
   label_every_30_minutes: Every 30 minutes
   label_hourly: Hourly
   label_daily: Daily
-  
+
   # Buttons
   button_test_connection: Test Connection
   button_save: Save
   button_fetch_emails: Fetch Emails Now
-  
+  button_apply: Apply
+
   # Messages
   text_email_receiver_description: This plugin allows Redmine to automatically create issues from emails fetched from an IMAP server.
   text_testing_connection: Testing connection
-  help_fetch_emails: This will manually check for new emails and create issues from them.
-  
-  # Success messages
   notice_connection_successful: Connection successful! IMAP server is available.
   notice_successful_update: Settings updated successfully.
   notice_emails_processed: "%{count} email(s) processed, %{errors} error(s) encountered."
-  
+  help_fetch_emails: This will manually check for new emails and create issues from them.
+
   # Error messages
   error_connection_params_missing: Connection parameters missing. Please fill in host, username, and password.
   error_folder_not_found: "Folder '%{folder}' not found. Available folders include: %{suggestion}"
   error_test_connection_failed: Connection test failed. Please check your settings.
   error_imap_not_configured: IMAP settings are not configured. Please configure them first.
   error_processing_emails: "Error processing emails: %{message}"
+  error_connection_failed: "Connection failed"
