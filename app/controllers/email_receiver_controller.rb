@@ -19,7 +19,7 @@ class EmailReceiverController < ApplicationController
     redirect_to action: 'index'
   end
   
-  def test_connection
+  def test_connection_two
     # Fix: Initialize settings to empty hash if nil
     settings = params[:settings] || Setting.plugin_redmine_email_receiver || {}
     
@@ -92,6 +92,145 @@ class EmailReceiverController < ApplicationController
       Rails.logger.info "error Receiver:  #{e.message}"
       respond_to do |format|
         format.json { render json: { status: 'error', message: e.message } }
+      end
+    end
+  end
+
+  def test_connection
+    settings = params[:settings] || Setting.plugin_redmine_email_receiver || {}
+
+    host = settings['imap_host']
+    port = (settings['imap_port'] || '993').to_i
+    ssl = settings['imap_ssl'] == '1'
+    username = settings['imap_username']
+    password = settings['imap_password']
+    folder = settings['imap_folder'] || 'INBOX'
+
+    # Debug output
+    Rails.logger.info "IMAP Connection Test with params: host=#{host}, port=#{port}, ssl=#{ssl}, username=#{username}, folder=#{folder}"
+
+    # Validate input
+    if host.blank? || username.blank? || password.blank?
+      response = { status: 'error', message: l(:error_connection_params_missing) }
+      Rails.logger.info "IMAP Connection Test result: #{response.inspect}"
+
+      respond_to do |format|
+        format.json { render json: response }
+      end
+      return
+    end
+
+    begin
+      require 'net/imap'
+
+      # Create SSL context with specific settings
+      ssl_context = OpenSSL::SSL::SSLContext.new
+      ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+      connection_method = ""
+      # Try to connect with default settings first
+      begin
+        Rails.logger.info "Attempting connection with default SSL settings"
+        connection_method = "default SSL settings"
+        imap = Net::IMAP.new(host,
+                          port: port,
+                          ssl: ssl,
+                          ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE)
+      rescue OpenSSL::SSL::SSLError => e
+        Rails.logger.info "SSL error with default settings: #{e.message}"
+        # If that fails, try with explicit TLS version
+        begin
+          Rails.logger.info "Attempting connection with TLSv1.2"
+          connection_method = "TLSv1.2"
+          ssl_context.ssl_version = :TLSv1_2
+          imap = Net::IMAP.new(host,
+                             port: port,
+                             ssl: {ssl_context: ssl_context})
+        rescue => e2
+          Rails.logger.info "SSL error with TLSv1.2: #{e2.message}"
+          # If that fails too, try without SSL
+          if ssl && port == 993
+            Rails.logger.info "Attempting connection without SSL on port 143"
+            connection_method = "non-SSL on port 143"
+            # Try falling back to port 143 without SSL
+            imap = Net::IMAP.new(host, port: 143, ssl: false)
+          else
+            raise e2
+          end
+        end
+      end
+
+      Rails.logger.info "Connection established using #{connection_method}"
+
+      # Login
+      Rails.logger.info "Attempting login with username: #{username}"
+      imap.login(username, password)
+      Rails.logger.info "Login successful"
+
+      # Check if folder exists
+      begin
+        Rails.logger.info "Examining folder: #{folder}"
+        imap.examine(folder)
+        Rails.logger.info "Folder found and accessible"
+      rescue Net::IMAP::NoResponseError => e
+        Rails.logger.info "Folder not found: #{e.message}"
+        # Try to recover by checking available folders
+        available_folders = imap.list('', '*').map { |f| f.name }
+        folder_suggestion = available_folders.first
+        Rails.logger.info "Available folders: #{available_folders.inspect}"
+
+        imap.logout
+        imap.disconnect
+
+        response = {
+          status: 'error',
+          message: l(:error_folder_not_found, folder: folder, suggestion: folder_suggestion)
+        }
+
+        Rails.logger.info "IMAP Connection Test result: #{response.inspect}"
+
+        respond_to do |format|
+          format.json { render json: response }
+        end
+        return
+      end
+
+      # Logout and disconnect
+      Rails.logger.info "Test successful, logging out"
+      imap.logout
+      imap.disconnect
+
+      # Create response
+      response = { status: 'success', message: l(:notice_connection_successful) }
+      Rails.logger.info "IMAP Connection Test result: #{response.inspect}"
+
+      # Return success message
+      respond_to do |format|
+        format.json { render json: response }
+      end
+    rescue => e
+      # Log the full error with backtrace
+      Rails.logger.error "IMAP Connection Error: #{e.class}: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+
+      # Create response with detailed error information
+      response = {
+        status: 'error',
+        message: "#{l(:error_connection_failed)}: #{e.message}",
+        connection_details: {
+          host: host,
+          port: port,
+          ssl: ssl,
+          folder: folder
+        },
+        error_class: e.class.to_s
+      }
+
+      Rails.logger.info "IMAP Connection Test result: #{response.inspect}"
+
+      # Return error message
+      respond_to do |format|
+        format.json { render json: response }
       end
     end
   end
