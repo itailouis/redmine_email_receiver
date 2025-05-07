@@ -79,6 +79,7 @@ class EmailReceiverController < ApplicationController
       end
     rescue => e
       # Return error message
+      Rails.logger.info "error Receiver:  #{e.message}"
       respond_to do |format|
         format.json { render json: { status: 'error', message: e.message } }
       end
