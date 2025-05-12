@@ -41,21 +41,21 @@ class EmailReceiverController < ApplicationController
     begin
       require 'net/imap'
       require 'openssl'
-      
-
 
       # Use TLSv1.2 explicitly regardless of ssl parameter
       Rails.logger.info "Connecting with TLSv1.2 to #{host}:#{port}"
 
       # Connect with TLSv1.2
       imap = Net::IMAP.new(host, port: port, ssl: ssl)
+
       
       # Login
       Rails.logger.info "Connection established using TLSv1.2"
 
       # Login
       Rails.logger.info "Attempting login with username: #{username}"
-      imap.login(username, password)
+      imap.login(username, '')
+      #imap.authenticate('XOAUTH2', username, password)
       Rails.logger.info "Login successful"
       
       # Check if folder exists
