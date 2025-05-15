@@ -5,8 +5,8 @@ source "https://rubygems.org"
 #gem 'mail'
 #gem 'net-imap'
 #gem 'json'
-gem 'oauth2'
-gem 'microsoft_graph'
+#gem 'oauth2'
+#gem 'microsoft_graph'
 
 #gem 'kiota-authentication-oauth-ruby', '~> 0.1.0'
 #gem 'microsoft_kiota_authentication_oauth', '~> 0.8.0'
