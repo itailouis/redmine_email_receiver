@@ -1,8 +1,24 @@
 # redmine_email_receiver/app/controllers/email_receiver_controller.rb
+#require '/usr/local/bundle/gems/oauth2-2.0.9/lib/oauth2.rb'
 
 class EmailReceiverController < ApplicationController
   before_action :require_admin
   layout 'admin'
+
+
+      CLIENT_ID = 'cec0b1c2-4268-45ad-8d54-1e5d1a0a2e3c'
+      CLIENT_SECRET = '65eadfc7-071e-4f98-b129-94b5596df2bc'
+      TENANT_ID = '2ab9ba88-e1a4-4c9a-8ebc-0fce705d2f56'
+      USER_EMAIL = 'innovation@fbc.co.zw'
+
+      # Get access token
+      def get_access_token
+        #
+
+        #client.client_credentials.get_token(scope: 'https://graph.microsoft.com/.default')
+
+      end
+
   
   def index
     # Fix: Initialize @settings to empty hash if nil
@@ -21,6 +37,8 @@ class EmailReceiverController < ApplicationController
   
   def test_connection
     # Fix: Initialize settings to empty hash if nil
+    #token = get_access_token
+    #Rails.inform "Access Token: #{token.token}"
     settings = params[:settings] || Setting.plugin_redmine_email_receiver || {}
     
     host = settings['imap_host']
@@ -40,11 +58,20 @@ class EmailReceiverController < ApplicationController
     
     begin
       require 'net/imap'
-      require 'openssl'
+      require 'oauth2'
+      require 'microsoft_graph'
+
+
+
+
+  client = MicrosoftGraph.new(
+                   client_id: @settings['client_id'],
+                   client_secret: @settings['client_secret'],
+                   tenant_id: @settings['tenant_id'],
+                   scope: 'https://graph.microsoft.com/.default');
 
       # Use TLSv1.2 explicitly regardless of ssl parameter
       Rails.logger.info "Connecting with TLSv1.2 to #{host}:#{port}"
-
       # Connect with TLSv1.2
       imap = Net::IMAP.new(host, port: port, ssl: ssl)
 
@@ -54,8 +81,8 @@ class EmailReceiverController < ApplicationController
 
       # Login
       Rails.logger.info "Attempting login with username: #{username}"
-      imap.login(username, '')
-      #imap.authenticate('XOAUTH2', username, password)
+      #imap.login(username, '')
+      imap.authenticate('XOAUTH2', username, "eyJ0eXAiOiJKV1QiLCJub25jZSI6IjlPUzJGN2s5QmxyaHhBM3BXRVdGNVVwVHNobFJwZURMeEdqV0JKT2VaNlEiLCJhbGciOiJSUzI1NiIsIng1dCI6IkNOdjBPSTNSd3FsSEZFVm5hb01Bc2hDSDJYRSIsImtpZCI6IkNOdjBPSTNSd3FsSEZFVm5hb01Bc2hDSDJYRSJ9.eyJhdWQiOiJodHRwczovL291dGxvb2sub2ZmaWNlMzY1LmNvbSIsImlzcyI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0LzJhYjliYTg4LWUxYTQtNGM5YS04ZWJjLTBmY2U3MDVkMmY1Ni8iLCJpYXQiOjE3NDcyOTMwMDksIm5iZiI6MTc0NzI5MzAwOSwiZXhwIjoxNzQ3Mjk2OTA5LCJhaW8iOiJBU1FBMi84WkFBQUFzeHphMXJOb1dJV0Njc2JQdmkwaHM5SHJFU1h6cXZSbElvUFA2cmkyY0hvPSIsImFwcF9kaXNwbGF5bmFtZSI6Iklubm92YXRpb24iLCJhcHBpZCI6ImNlYzBiMWMyLTQyNjgtNDVhZC04ZDU0LTFlNWQxYTBhMmUzYyIsImFwcGlkYWNyIjoiMSIsImlkcCI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0LzJhYjliYTg4LWUxYTQtNGM5YS04ZWJjLTBmY2U3MDVkMmY1Ni8iLCJpZHR5cCI6ImFwcCIsIm9pZCI6IjlkNjU1ZGY2LTIxYWEtNDU5OS1iNDA4LTUwMjY0ZTgxMmUwNCIsInJoIjoiMS5BWUlBaUxxNUtxVGhta3lPdkFfT2NGMHZWZ0lBQUFBQUFQRVB6Z0FBQUFBQUFBQ0NBQUNDQUEuIiwic2lkIjoiMDA0ZTlkMTktZTI4MS1hNTVlLTk1ZTItNzQwMzUwMDZiYWE1Iiwic3ViIjoiOWQ2NTVkZjYtMjFhYS00NTk5LWI0MDgtNTAyNjRlODEyZTA0IiwidGlkIjoiMmFiOWJhODgtZTFhNC00YzlhLThlYmMtMGZjZTcwNWQyZjU2IiwidXRpIjoiZEJsUXNudlZvRXE2d2NFYi0xVU9BQSIsInZlciI6IjEuMCIsIndpZHMiOlsiMDk5N2ExZDAtMGQxZC00YWNiLWI0MDgtZDVjYTczMTIxZTkwIl0sInhtc19hdWRfZ3VpZCI6IjAwMDAwMDAyLTAwMDAtMGZmMS1jZTAwLTAwMDAwMDAwMDAwMCIsInhtc19pZHJlbCI6IjcgMiIsInhtc19yZCI6IjAuNDJMallCSmlhbUlVRXVGZ0Z4STRmdjlWcWh6N0RQLU5tbE8yUnVaLTJnTVU1UlFTWU5KYnRMSFBLODZ4TTJtMnhvcDF1ZE1BIn0.DJNYYkUam0l-uSYMpUKzbjSWPLjbqkmRZih9Vr4o8kHh4WTTjmJTybCdfpkzpDAK2Pqb5Q2Un90tEp60SvQyr0yXY_XAEP7jz8The7vR_FjYazqVbgyGqH_y2Xoer3fDHoElGwtxoaDiUkLtX-wxA_Yd0Py7NQnBD10qFfBquGU1ypVNaLCYiY1QPTXMOq9vckU4j2bk3QwuhB_2rfxDOGPHgCebA_wG5T5Z7InsN-k09XH6IvixAahZpLav4YiJcGIgRcSlodPszCuWdpIYimG8rfxI8NKPSIaVJzoJ3_LvFOyZ8spga3ZDCGKoP7mUeKYbe5uEJ4PcCDqtkh1iGg")
       Rails.logger.info "Login successful"
       
       # Check if folder exists

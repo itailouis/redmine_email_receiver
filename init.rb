@@ -1,5 +1,26 @@
 require 'redmine'
 
+plugin_root = File.dirname(__FILE__)
+if File.exist?(File.join(plugin_root, 'Gemfile'))
+  require 'bundler'
+  begin
+    # Load gems from the plugin's Gemfile
+    Bundler.setup(:default)
+    # Add the plugin's vendor/bundle directory to the load path
+    $LOAD_PATH.unshift(File.join(plugin_root, 'vendor/bundle'))
+  rescue Bundler::GemNotFound => e
+    Rails.logger.error "Bundler couldn't find some gems for redmine_email_receiver: #{e.message}"
+    puts "Error: Some gems are missing. Run 'bundle install' in the plugin directory."
+  end
+end
+
+# Now require the kiota gems
+begin
+  require 'microsoft_kiota_authentication_oauth'
+rescue LoadError => e
+  Rails.logger.error "Could not load microsoft_kiota_authentication_oauth: #{e.message}"
+end
+
 def load_settings
     config_file = File.join(File.dirname(__FILE__), 'config', 'settings.yml')
     unless File.exist?(config_file)
